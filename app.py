@@ -24,9 +24,9 @@ if not api_key:
 # تهيئة مكتبة Gemini
 genai.configure(api_key=api_key)
 
-# 3. استخدام نموذج Gemini (استخدام الاسم المباشر والمحدث لتفادي خطأ 404)
+# 3. تهيئة النموذج باستخدام الاسم الأحدث لتفادي خطأ 404
 try:
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-1.5-flash-latest")
 except Exception as e:
     st.error(f"حدث خطأ أثناء تهيئة النموذج: {e}")
 
@@ -60,8 +60,6 @@ user_prompt = None
 
 if audio:
     st.info("جاري معالجة الصوت...")
-    # ملاحظة: يمكنك إضافة تحويل الصوت لنص هنا إذا توفرت مكتبة التعرف على الصوت
-    # حالياً نعتمد على الإدخال النصي كمصدر رئيسي للطلبات
 
 # 8. حقل الإدخال النصي
 if prompt := st.chat_input("أو اكتب سؤالك هنا..."):
@@ -69,12 +67,10 @@ if prompt := st.chat_input("أو اكتب سؤالك هنا..."):
 
 # 9. معالجة الإدخال وإرساله لـ Gemini
 if user_prompt:
-    # إضافة سؤال المستخدم للسجل وعرضه
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
-    # الحصول على إجابة موسى
     with st.chat_message("assistant"):
         with st.spinner("موسى يفكر..."):
             try:
@@ -82,10 +78,8 @@ if user_prompt:
                 bot_reply = response.text
                 st.markdown(bot_reply)
                 
-                # تحويل الرد إلى صوت
                 text_to_speech(bot_reply)
                 
-                # حفظ رد موسى في السجل
                 st.session_state.messages.append({"role": "assistant", "content": bot_reply})
             except Exception as e:
                 st.error(f"تعذر الحصول على رد من موسى: {e}")
