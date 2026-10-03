@@ -1,82 +1,45 @@
-import os
 import streamlit as st
+import os
 import google.generativeai as genai
-from gtts import gTTS
-from streamlit_mic_recorder import mic_recorder
 
-# 1. إعدادات الصفحة
-st.set_page_config(
-    page_title="المساعد الذكي موسى",
-    page_icon="🤖",
-    layout="centered"
-)
+# إعداد عنوان الصفحة
+st.set_page_config(page_title="المساعد الذكي موسى", page_icon="🤖", layout="centered")
 
-st.title("🤖 المساعد الذكي موسى")
-st.write("مرحباً بك! يمكنك التحدث معي بالصوت أو الكتابة.")
+st.title("المساعد الذكي موسى 🤖")
+st.write("مرحباً بك! يمكنك التحدث معي بسهولة.")
 
-# 2. جلب مفتاح الـ API من Secrets
-api_key = st.secrets.get("GEMINI_API_KEY")
+# جلب مفتاح API من متغيرات البيئة في Render أولاً، ثم من st.secrets كخيار احتياطي
+api_key = os.getenv("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("لم يتم العثور على مفتاح GEMINI_API_KEY في قسم Secrets. يرجى إضافته أولاً.")
+    st.error("لم يتم العثور على مفتاح GEMINI_API_KEY. يرجى إضافته في إعدادات Environment في Render.")
     st.stop()
 
-# تهيئة مكتبة Gemini
+# تهيئة نموذج Gemini
 genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 3. تهيئة النموذج بأحدث إصدار مستقر
-try:
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-except Exception as e:
-    st.error(f"حدث خطأ أثناء تهيئة النموذج: {e}")
-
-# 4. تهيئة سجل المحادثة
+# إدارة سجل المحادثة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# 5. عرض المحادثات السابقة
+# عرض الرسائل السابقة
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 6. تحويل النص إلى صوت
-def text_to_speech(text):
-    try:
-        tts = gTTS(text=text, lang='ar')
-        tts.save("response.mp3")
-        st.audio("response.mp3", format="audio/mp3")
-    except Exception as e:
-        st.warning("تعذر تحويل الرد إلى صوت.")
-
-# 7. التسجيل الصوتي
-st.subheader("🎤 اضغط للتحدث مع موسى بصوتك")
-audio = mic_recorder(
-    start_prompt="اضغط للبدء بالكلام 🔴",
-    stop_prompt="اضغط للانتهاء والتسجيل ⏹️",
-    key='recorder'
-)
-
-user_prompt = None
-
-# 8. حقل الإدخال النصي
-if prompt := st.chat_input("أو اكتب سؤالك هنا..."):
-    user_prompt = prompt
-
-# 9. معالجة الإدخال وإرساله لـ Gemini
-if user_prompt:
-    st.session_state.messages.append({"role": "user", "content": user_prompt})
+# استقبال مدخلات المستخدم
+if prompt := st.chat_input("اكتب رسالتك هنا..."):
+    # إضافة رسالة المستخدم للسجل وعرضها
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.markdown(user_prompt)
+        st.markdown(prompt)
 
+    # الحصول على رد المساعد الذكي
     with st.chat_message("assistant"):
-        with st.spinner("موسى يفكر..."):
-            try:
-                response = model.generate_content(user_prompt)
-                bot_reply = response.text
-                st.markdown(bot_reply)
-                
-                text_to_speech(bot_reply)
-                
-                st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-            except Exception as e:
-                st.error(f"تعذر الحصول على رد من موسى: {e}")
+        try:
+            response = model.generate_content(prompt)
+            st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
+        except Exception as e:
+            st.error(f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {e}")
