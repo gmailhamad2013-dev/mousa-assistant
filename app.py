@@ -24,13 +24,13 @@ if not api_key:
 # تهيئة مكتبة Gemini
 genai.configure(api_key=api_key)
 
-# 3. تهيئة النموذج باستخدام الاسم الأحدث لتفادي خطأ 404
+# 3. تهيئة النموذج بأحدث إصدار مستقر
 try:
     model = genai.GenerativeModel("gemini-1.5-flash-latest")
 except Exception as e:
     st.error(f"حدث خطأ أثناء تهيئة النموذج: {e}")
 
-# 4. تهيئة سجل المحادثة في الجلسة
+# 4. تهيئة سجل المحادثة
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -39,7 +39,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 6. وظيفة تحويل النص إلى صوت
+# 6. تحويل النص إلى صوت
 def text_to_speech(text):
     try:
         tts = gTTS(text=text, lang='ar')
@@ -48,7 +48,7 @@ def text_to_speech(text):
     except Exception as e:
         st.warning("تعذر تحويل الرد إلى صوت.")
 
-# 7. قسم التسجيل الصوتي
+# 7. التسجيل الصوتي
 st.subheader("🎤 اضغط للتحدث مع موسى بصوتك")
 audio = mic_recorder(
     start_prompt="اضغط للبدء بالكلام 🔴",
@@ -57,9 +57,6 @@ audio = mic_recorder(
 )
 
 user_prompt = None
-
-if audio:
-    st.info("جاري معالجة الصوت...")
 
 # 8. حقل الإدخال النصي
 if prompt := st.chat_input("أو اكتب سؤالك هنا..."):
