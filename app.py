@@ -15,9 +15,9 @@ if not api_key:
     st.error("لم يتم العثور على مفتاح GEMINI_API_KEY. يرجى إضافته في إعدادات Environment في Render.")
     st.stop()
 
-# تهيئة نموذج Gemini باستخدام النموذج المعتمد
+# تهيئة نموذج Gemini باستخدام نموذج gemini-pro المستقر
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-pro')
 
 # إدارة سجل المحادثة
 if "messages" not in st.session_state:
