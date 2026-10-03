@@ -8,16 +8,16 @@ st.set_page_config(page_title="المساعد الذكي موسى", page_icon="�
 st.title("المساعد الذكي موسى 🤖")
 st.write("مرحباً بك! يمكنك التحدث معي بسهولة.")
 
-# جلب مفتاح API من متغيرات البيئة في Render أولاً، ثم من st.secrets كخيار احتياطي
+# جلب مفتاح API من متغيرات البيئة أو من st.secrets
 api_key = os.getenv("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
     st.error("لم يتم العثور على مفتاح GEMINI_API_KEY. يرجى إضافته في إعدادات Environment في Render.")
     st.stop()
 
-# تهيئة نموذج Gemini
+# تهيئة نموذج Gemini باستخدام الإصدار الأحدث المتوافق
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 # إدارة سجل المحادثة
 if "messages" not in st.session_state:
