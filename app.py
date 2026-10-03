@@ -1,4 +1,16 @@
-import streamlit as st
+import streamlit as st import streamlit as st
+
+# ضبط إعدادات الصفحة وأيقونة التبويب
+st.set_page_config(
+    page_title="موسى المساعد الذكي",
+    page_icon="mousa.png",  # أيقونة التبويب في المتصفح
+    layout="centered"
+)
+
+# عرض الشعار في أعلا الواجهة
+st.image("mousa.png", width=250)
+st.title("مرحباً بك! أنا موسى المساعد الذكي 🤖")
+
 import google.generativeai as genai
 from elevenlabs.client import ElevenLabs
 
