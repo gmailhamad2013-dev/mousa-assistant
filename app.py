@@ -20,10 +20,11 @@ else:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
 
+    # تهيئة سجل المحادثات
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # عرض المحادثات السابقة
+    # عرض كافة المحادثات السابقة
     for idx, msg in enumerate(st.session_state.messages):
         with st.chat_message(msg["role"]):
             st.write(msg["content"])
@@ -34,18 +35,19 @@ else:
                     tts.save(audio_path)
                     st.audio(audio_path, format="audio/mp3", autoplay=True)
 
+    # 1. الميكروفون للتحدث الصوتي
     st.write("🎤 **اضغط للتحدث مع موسى بصوتك:**")
     audio_record = mic_recorder(
         start_prompt="🔴 اضغط للبدء بالكلام",
-        stop_prompt="⏹️ اضغط للإرسال",
+        stop_prompt="⏹️️ اضغط للإرسال",
         key='recorder'
     )
 
-    user_text = None
-    reply_text = None
+    # 2. حقل الكتابة النصية
+    user_prompt = st.chat_input("أو اكتب سؤالك هنا...")
 
-    # معالجة الصوت مباشرة بدون رفع ملفات
-    if audio_record:
+    # معالجة الرسالة الصوتية إن وجدت
+    if audio_record and "audio_processed" not in st.session_state:
         audio_bytes = audio_record['bytes']
         audio_data = {
             "mime_type": "audio/wav",
@@ -54,21 +56,22 @@ else:
         with st.spinner("موسى يستمع إلى صوتك..."):
             try:
                 response = model.generate_content(["استمع لهذا الصوت وأجب عليه باللغة العربية:", audio_data])
-                user_text = "🎙️ [رسالة صوتية]"
-                reply_text = response.text
+                st.session_state.messages.append({"role": "user", "content": "🎙️ [رسالة صوتية]"})
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+                st.rerun()
             except Exception as e:
                 st.error(f"حدث خطأ أثناء معالجة الصوت: {e}")
 
-    # كتابة نصية عادية إذا لم يتحدث
-    if not audio_record:
-        if prompt := st.chat_input("أو اكتب سؤالك هنا..."):
-            user_text = prompt
-            with st.spinner("موسى يفكر..."):
-                response = model.generate_content(prompt)
-                reply_text = response.text
+    # معالجة النص المكتوب
+    elif user_prompt:
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+        with st.chat_message("user"):
+            st.write(user_prompt)
 
-    # حفظ الرسائل وإعادة التحديث
-    if user_text and reply_text:
-        st.session_state.messages.append({"role": "user", "content": user_text})
-        st.session_state.messages.append({"role": "assistant", "content": reply_text})
-        st.rerun()
+        with st.chat_message("assistant"):
+            with st.spinner("موسى يفكر..."):
+                response = model.generate_content(user_prompt)
+                reply_text = response.text
+                st.write(reply_text)
+                st.session_state.messages.append({"role": "assistant", "content": reply_text})
+                st.rerun()
