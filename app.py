@@ -4,7 +4,7 @@ from gtts import gTTS
 from streamlit_mic_recorder import mic_recorder
 import os
 
-# ضبط عنوان الصفحة واللوجو
+# ضبط عنوان الصفحة
 st.set_page_config(page_title="موسى - المساعد الذكي", page_icon="🤖")
 
 if os.path.exists("mousa.png"):
@@ -12,14 +12,14 @@ if os.path.exists("mousa.png"):
 
 st.title("💬 المساعد الذكي موسى")
 
-# جلب المفتاح من Secrets
+# جلب المفتاح
 api_key = st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
     st.error("الرجاء إضافة GEMINI_API_KEY في إعدادات Secrets!")
 else:
     genai.configure(api_key=api_key)
-    # استخدام نموذج gemini-1.5-flash المستقر والمستمر
+    # اسم النموذج مكتوب بدقة وبدون أي أخطاء إملائية
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     if "messages" not in st.session_state:
@@ -36,7 +36,7 @@ else:
                     tts.save(audio_path)
                     st.audio(audio_path, format="audio/mp3", autoplay=True)
 
-    # 1. زر التسجيل الصوتي
+    # التسجيل الصوتي
     st.write("🎤 **اضغط للتحدث مع موسى بصوتك:**")
     audio_record = mic_recorder(
         start_prompt="🔴 اضغط للبدء بالكلام",
@@ -44,10 +44,10 @@ else:
         key='recorder'
     )
 
-    # 2. حقل الكتابة النصية
+    # الكتابة النصية
     user_prompt = st.chat_input("أو اكتب سؤالك هنا...")
 
-    # معالجة التسجيل الصوتي
+    # معالجة الصوت
     if audio_record and "audio_processed" not in st.session_state:
         audio_bytes = audio_record['bytes']
         audio_data = {
@@ -63,7 +63,7 @@ else:
             except Exception as e:
                 st.error(f"حدث خطأ أثناء معالجة الصوت: {e}")
 
-    # معالجة النص المكتوب
+    # معالجة النص
     elif user_prompt:
         st.session_state.messages.append({"role": "user", "content": user_prompt})
         with st.chat_message("user"):
